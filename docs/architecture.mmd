@@ -1,0 +1,18 @@
+flowchart LR
+  A[MaStR] --> P[pipelines]
+  B[SMARD] --> P
+  C[Netztransparenz] --> P
+  D[BNetzA auctions CSV] --> P
+  E[Wind resource: ninja / GWA] --> P
+  P --> M[(DuckDB mart)]
+  M --> API[FastAPI]
+  API --> ENG[Deterministic engine]
+  ENG --> EV[(EvidenceStore)]
+  EV --> GATE[Compliance gate - code]
+  EV --> CR[3 critics - Claude]
+  CR --> N[Narrator - Claude]
+  GATE --> N
+  N --> V{Citation validator}
+  V -->|pass| UI[Next.js: map / dossier / memo]
+  V -->|fail| CR
+  UI --> H[Human veto]

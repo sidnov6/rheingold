@@ -1,0 +1,20 @@
+[project]
+name = "rheingold-engine"
+version = "0.1.0"
+description = "RHEINGOLD deterministic project-finance engine — pure, no network, no LLM"
+requires-python = ">=3.11"
+dependencies = [
+    "numpy>=1.26",
+    "pandas>=2.2",
+    "scipy>=1.13",
+    "pydantic>=2.7",
+    "numpy-financial>=1.0",
+    "pyyaml>=6.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["rheingold_engine"]

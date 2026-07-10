@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+.hypothesis/
+*.egg-info/
+.coverage
+htmlcov/
+dist/
+
+# Node
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+.vercel
+next-env.d.ts
+
+# Env
+.env
+.env.local
+.env*.local
+
+# Data — raw downloads are never committed; mart artifacts are (small ones)
+data/raw/
+data/mart/*.duckdb.wal
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
