@@ -1,0 +1,90 @@
+# RHEINGOLD engine default assumptions — mirrors models.Assumptions field-for-field (§8.1).
+# Every value carries a source. The methodology page renders this file: config IS documentation.
+# Vintage-dependent values (capex, opex, interest) are overridden per farm from
+# data/manual/cost_vintages.csv by commissioning year; the values here are the
+# fallback for farms outside the vintage table's range.
+
+lifetime_years:
+  value: 25
+  source: "Standard German onshore design life; WindGuard Kostensituation studies assume 20–25y, modern permits 25y+"
+availability:
+  value: 0.97
+  source: "Author field experience (Suzlon O&M, 10+ plants); consistent with full-service contract guarantees of 95–97%"
+electrical_losses:
+  value: 0.02
+  source: "Typical park-internal + grid-connection electrical losses, DNV/WindGuard energy-assessment practice"
+wake_losses:
+  value: 0.06
+  source: "Typical German onshore park wake deficit for mid-size parks; applied only when CF is single-turbine based"
+curtailment_redispatch:
+  value: 0.02
+  source: "BNetzA Monitoringbericht redispatch/EinsMan volumes for onshore wind, order-of-magnitude national average"
+degradation_pa:
+  value: 0.002
+  source: "Staffell & Green (2014), UK fleet performance degradation ~0.2%/yr aged-fleet estimate"
+capex_eur_per_mw:
+  value: 1650000
+  source: "FALLBACK ONLY — per-vintage values from data/manual/cost_vintages.csv (WindGuard/Fraunhofer ISE/IRENA)"
+opex_fixed_eur_per_mw_yr:
+  value: 55000
+  source: "FALLBACK ONLY — per-vintage values from data/manual/cost_vintages.csv (WindGuard Betriebskosten)"
+opex_variable_eur_per_mwh:
+  value: 0.0
+  source: "Variable O&M folded into fixed full-service rate by default (§8.4)"
+land_lease_pct_revenue:
+  value: 0.06
+  source: "German onshore land-lease benchmarks, 4–8% of revenue; WindGuard Kostensituation 2019 range midpoint"
+municipal_participation_ct_kwh:
+  value: 0.2
+  source: "EEG 2023 §6: up to 0.2 ct/kWh to hosting municipalities; market practice treats as standard for new builds"
+municipal_participation_enabled:
+  value: true
+  source: "EEG §6 participation is voluntary but near-universal in post-2021 projects"
+inflation_pa:
+  value: 0.02
+  source: "ECB medium-term inflation target"
+revenue_mode:
+  value: eeg_premium
+  source: "Default German route-to-market: EEG Marktprämienmodell (§8.3.2)"
+anzulegender_wert_ct_kwh:
+  value: null
+  source: "None → engine solves break-even bid (§8.6); real farms use awarded AW when known"
+ppa_price_eur_mwh:
+  value: null
+  source: "PPA mode only"
+eeg_support_years:
+  value: 20
+  source: "EEG §25: 20-year support period from commissioning"
+neg_price_rule_hours:
+  value: 4
+  source: "EEG §51 (2021): premium = 0 in negative-price streaks ≥ 4h; per-vintage mapping in MODEL_CARD.md"
+merchant_tail:
+  value: true
+  source: "Years beyond support earn wind-weighted capture price (§8.3)"
+target_dscr:
+  value: 1.30
+  source: "German onshore project-finance market convention for EEG-backed revenue (1.20–1.35 range)"
+max_gearing:
+  value: 0.75
+  source: "Typical senior gearing cap for onshore wind with EEG revenue"
+debt_tenor_years:
+  value: 18
+  source: "Market convention: support period (20y) minus 1–2y tail"
+interest_rate:
+  value: 0.045
+  source: "FALLBACK ONLY — per-vintage values from data/manual/cost_vintages.csv"
+dsra_months:
+  value: 6
+  source: "6-month DSRA is standard senior-debt security package"
+wacc:
+  value: 0.058
+  source: "Fraunhofer ISE LCOE study WACC range for German onshore wind (nominal)"
+equity_target_irr:
+  value: 0.08
+  source: "Infrastructure-fund hurdle for German onshore wind equity, market commentary range 7–9%"
+tax_rate:
+  value: 0.30
+  source: "German corporate tax ≈ 15% KSt + Soli + ~14–17% GewSt → ~30% combined (§8.7 simplification)"
+depreciation_years:
+  value: 16
+  source: "AfA table for wind turbines: 16-year straight-line standard"
