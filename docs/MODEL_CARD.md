@@ -22,7 +22,23 @@ the agent layer only narrates evidence the engine produced.
   (sculpt pre-tax → tax → re-sculpt once). Not iterated to convergence.
 - **§51 negative-price rule:** modeled as a single config int
   (`neg_price_rule_hours`) applied to the representative price year's streaks.
-  <!-- RESEARCH: commissioning-year mapping table goes here -->
+  The cohort mapping (verified against §§51/51a/100 EEG, Clearingstelle FAQ 264,
+  buzer.de amendment history, as of 2026-07-11):
+
+  | Commissioning (or tender award) | Rule | Engine int |
+  |---|---|---|
+  | ≤ 2015-12-31 | no negative-price rule | 8760 (sentinel: never triggers) |
+  | 2016–2020 | ≥ 6 consecutive negative hours (wind ≥ 3 MW w/ §24 aggregation) | 6 |
+  | 2021–2022 | ≥ 4 consecutive hours (EEG 2021) | 4 |
+  | 2023-01-01 – 2025-02-24 | stepdown **by calendar year of the event**: 4h (2023), 3h (2024 **and** 2025), 2h (2026), 1h (2027+) | 1 (steady state 2027+; 2026's 2h documented deviation) |
+  | ≥ 2025-02-25 (Solarspitzengesetz) | premium = 0 in **every** negative quarter-hour (wind included) | 0 |
+
+  Simplifications: (a) the stepdown cohort is keyed on commissioning OR tender
+  award date — we key on commissioning year only, which overstates severity for
+  farms awarded pre-25.02.2025 but commissioned later; (b) the current
+  quarter-hour rule is approximated at hourly resolution; (c) the §51a
+  support-period extension (lost time appended after year 20, day-rounded) is
+  **not modeled** — a documented conservative bias.
 
 ## Known limitations (deliberate)
 
