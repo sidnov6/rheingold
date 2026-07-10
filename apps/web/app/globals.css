@@ -1,0 +1,99 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Nachtgold tokens — spec §3.1, exact. Gold is DATA ONLY. */
+:root {
+  /* Surfaces */
+  --bg-0: #0b0b0e; /* app background — obsidian */
+  --bg-1: #121217; /* panels */
+  --bg-2: #1a1b21; /* raised cards, table headers */
+  --border: #26262e; /* 1px hairlines everywhere; no shadows */
+
+  /* The gold — DATA ONLY (turbines, key numbers, citations, primary CTA) */
+  --gold-500: #c9a227;
+  --gold-400: #e3b93c; /* hover */
+  --gold-300: #f0d06a; /* selected turbine pulse */
+  --gold-dim: rgba(201, 162, 39, 0.16); /* fills, focus rings */
+
+  /* The Rhine — debt, liabilities, water, secondary series */
+  --rhine-500: #3e7c9b;
+  --rhine-300: #6fa7c4;
+
+  /* Text */
+  --text-hi: #f2efe6; /* warm off-white */
+  --text-mid: #b9b4a6;
+  --text-low: #6e6a5e;
+
+  /* Semantics */
+  --pos: #3fa47a;
+  --neg: #c4554d;
+  --warn: #d08a2e;
+
+  /* The paper memo (signature element) */
+  --paper: #f4efe2;
+  --paper-edge: #e4dcc8;
+  --ink: #1e1b14;
+  --stamp-proceed: #2e6e4e;
+  --stamp-conditions: #8a6d1c;
+  --stamp-decline: #8a3b33;
+}
+
+@layer base {
+  html {
+    background: var(--bg-0);
+    color: var(--text-hi);
+  }
+  body {
+    font-family: var(--font-plex-sans), system-ui, sans-serif;
+    font-size: 14px;
+    -webkit-font-smoothing: antialiased;
+  }
+  ::selection {
+    background: var(--gold-dim);
+  }
+  :focus-visible {
+    outline: 2px solid var(--gold-dim);
+    outline-offset: 1px;
+  }
+}
+
+@layer utilities {
+  /* Every number in the app: IBM Plex Mono, tabular figures (§3.2) */
+  .num {
+    font-family: var(--font-plex-mono), ui-monospace, monospace;
+    font-feature-settings: "tnum";
+    font-variant-numeric: tabular-nums;
+  }
+  /* Barely-visible radial gold glow behind the map hero — the only allowed gradient (§3.3) */
+  .map-glow {
+    background: radial-gradient(
+      ellipse 60% 50% at 50% 45%,
+      rgba(201, 162, 39, 0.05),
+      transparent 70%
+    );
+  }
+  .hairline {
+    border: 1px solid var(--border);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* MapLibre chrome must obey the dark shell */
+.maplibregl-ctrl-attrib {
+  background: rgba(11, 11, 14, 0.7) !important;
+  color: var(--text-low) !important;
+  font-size: 10px;
+}
+.maplibregl-ctrl-attrib a {
+  color: var(--text-mid) !important;
+}
