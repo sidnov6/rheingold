@@ -35,7 +35,11 @@ from .models import (
 from .scenarios import apply_capex_shock, apply_rate_shocks
 from .sensitivity import tornado as tornado_mod
 
-_BREAKEVEN_LO, _BREAKEVEN_HI = 2.0, 12.0
+# Spec §8.6 says AW ∈ [2, 12]; the floor is widened to 0.5 ct/kWh because the
+# Path B resource bias yields farms whose break-even sits below 2 ct — clamping
+# there would censor the backtest distribution upward and hide model error
+# (documented in MODEL_CARD).
+_BREAKEVEN_LO, _BREAKEVEN_HI = 0.5, 12.0
 
 
 def _effective_life(a: Assumptions) -> int:

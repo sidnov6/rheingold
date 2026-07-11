@@ -174,12 +174,16 @@ def build_underwrite(body: UnderwriteRequest) -> UnderwriteResult:
     )
 
     vintage = market.cost_vintage(year)
+    # AW default: the REAL volume-weighted average award of the farm's
+    # commissioning-year BNetzA rounds (auction era, 2017+). Pre-auction farms
+    # fall back to the engine's break-even solve. Users can always override.
+    aw_default = market.auction_award_ct_kwh(year)
     overrides: dict[str, Any] = {
         "capex_eur_per_mw": vintage.capex_eur_per_mw,
         "opex_fixed_eur_per_mw_yr": vintage.opex_fixed_eur_per_mw_yr,
         "interest_rate": vintage.interest_rate,
         "neg_price_rule_hours": eeg51.neg_price_rule_hours(year),
-        "anzulegender_wert_ct_kwh": None,  # engine solves the break-even bid
+        "anzulegender_wert_ct_kwh": aw_default,  # None → engine break-even solve
     }
     overrides.update(body.assumptions_overrides or {})
 

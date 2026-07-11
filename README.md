@@ -55,9 +55,15 @@ renewables.ninja (**CC BY-NC 4.0 — this project is non-commercial**).
 
 ## Results
 
-<!-- backtest: "Median model bid tracks the observed award-price trajectory
-2017–2025 with MAE ≈ X ct/kWh" — filled from `make backtest`, never promised
-before measuring. -->
+From `make backtest` (§12, deterministic, seed 42): **the median model bid
+tracks the observed BNetzA award-price trajectory 2017–2024 with MAE ≈ 1.10
+ct/kWh** across the 22 priceable rounds (directional hit-rate 0.55). Two
+honest failure modes are part of the result: 2019–2020 rounds run ~1.3–1.6 ct
+below actual awards (undersubscribed rounds pushed clearing prices to the
+Höchstwert — a winner's-curse-free regime the break-even model cannot see),
+and the 2021–2023 rounds are **unpriceable** under a flat forward at
+crisis-year spot levels (any bid ≥ 0.5 ct cleared the hurdle) — recorded as
+skipped-with-reason in the output rather than hidden.
 
 ## Limitations
 

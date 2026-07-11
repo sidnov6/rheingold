@@ -12,11 +12,12 @@ the actual Ø-Zuschlagswert. Reports MAE (ct/kWh) and the directional hit-rate.
 Deterministic: sampling uses a fixed seed. Reads local parquet/CSV only —
 no network. Run via `make backtest`; output feeds /backtest in the web app.
 
-Documented simplifications (also on the /backtest page): uniform representative
-price year across all rounds (the market-premium mechanism makes the break-even
-bid mostly price-year-independent during support); flat hourly generation shape
+Documented simplifications (also on the /backtest page): each round is priced
+with its own calendar year's SMARD/Marktwert market (2017/2018 rounds fall back
+to 2019, the earliest complete SMARD DE/LU year); flat hourly generation shape
 (Path B has no hourly profile), which weights §51 hours by time rather than
-production and sets capture ≈ 1 for the merchant tail.
+production and sets capture ≈ 1 for the merchant tail; AW bracket widened to
+[0.5, 12] ct/kWh so Path B resource bias cannot censor the bid distribution.
 """
 
 from __future__ import annotations
@@ -63,17 +64,24 @@ def neg_rule_hours_for_round(round_date: str) -> int:
     return 0  # every negative hour
 
 
-def build_market_inputs(mart_dir: Path) -> MarketInputs:
-    """Representative market year from the mart parquet (latest complete calendar year)."""
+def build_market_inputs(mart_dir: Path, year: int | None = None) -> MarketInputs:
+    """Representative market year from the mart parquet.
+
+    year=None → latest complete calendar year. An explicit year is clamped to
+    the available complete years — the backtest prices each auction round with
+    the round's own calendar year so bids are compared against the market the
+    bidders actually saw (SMARD DE/LU starts 2018-10, so 2017/2018 rounds use
+    2019, the earliest complete year — documented caveat).
+    """
     prices = pd.read_parquet(mart_dir / "prices_hourly.parquet")
     prices["ts"] = pd.to_datetime(prices["ts"])
     counts = prices.groupby(prices["ts"].dt.year).size()
     complete = [int(y) for y, n in counts.items() if n >= 8760]
     if not complete:
         raise RuntimeError("no complete calendar year in prices_hourly — run download_smard.py")
-    year = max(complete)
+    year = max(complete) if year is None else min(max(year, min(complete)), max(complete))
     py = prices[prices["ts"].dt.year == year].sort_values("ts")
-    # drop leap-day extra hours beyond 8784 handling: keep as-is (8760 or 8784)
+    # keep the calendar year as-is (8760 or 8784 hours)
     hourly = py["eur_mwh"].tolist()
     months = (py["ts"].dt.month - 1).tolist()
 
@@ -122,18 +130,29 @@ def run_backtest(
     farms_with_resource: pd.DataFrame,
     auctions: pd.DataFrame,
     vintages: pd.DataFrame,
-    market: MarketInputs,
+    market: MarketInputs | dict[int, MarketInputs],
     n_per_round: int = N_PER_ROUND,
 ) -> dict:
+    """market: a single MarketInputs (tests) or {round_year: MarketInputs} so each
+    round is priced against its own calendar year's market."""
     rng = np.random.default_rng(SEED)
     vint = vintages.set_index("vintage_year")
     rounds_out = []
+    skipped: list[dict] = []
     for _, row in auctions.sort_values("round_date").iterrows():
         round_year = int(str(row["round_date"])[:4])
+        round_market = market[round_year] if isinstance(market, dict) else market
         vy = min(max(round_year, int(vint.index.min())), int(vint.index.max()))
         v = vint.loc[vy]
         sampled = sample_round_farms(farms_with_resource, round_year, rng)
         if sampled.empty:
+            skipped.append(
+                {
+                    "round_date": str(row["round_date"]),
+                    "n_solvable": 0,
+                    "reason": "no commissioned proxy farms in [Y, Y+2] yet (registry lag)",
+                }
+            )
             continue
         if n_per_round != N_PER_ROUND and len(sampled) > n_per_round:
             sampled = sampled.head(n_per_round)
@@ -165,16 +184,22 @@ def run_backtest(
                 }
             )
             try:
-                bid = solve_breakeven_bid(farm, assumptions, market, shocks=_no_shocks())
+                bid = solve_breakeven_bid(farm, assumptions, round_market, shocks=_no_shocks())
             except ValueError:
                 bid = None
             if bid is not None:
                 bids.append(bid)
         if len(bids) < 5:
-            print(
-                f"  {row['round_date']}: only {len(bids)} solvable bids — skipping round",
-                file=sys.stderr,
+            reason = (
+                "break-even below 0.5 ct/kWh for nearly all farms — crisis-year spot levels "
+                "clear the hurdle at any bid (flat-forward limitation)"
+                if 2021 <= round_year <= 2023
+                else f"only {len(bids)} solvable bids in the sample"
             )
+            skipped.append(
+                {"round_date": str(row["round_date"]), "n_solvable": len(bids), "reason": reason}
+            )
+            print(f"  {row['round_date']}: skipped — {reason}", file=sys.stderr)
             continue
         arr = np.sort(np.array(bids))
         rounds_out.append(
@@ -208,6 +233,7 @@ def run_backtest(
             hits += 1
     return {
         "rounds": rounds_out,
+        "skipped": skipped,
         "mae_ct_kwh": round(mae, 3),
         "directional_hit_rate": round(hits / moves, 3) if moves else None,
         "generated_at": dt.datetime.now(dt.UTC).isoformat(timespec="seconds"),
@@ -215,7 +241,8 @@ def run_backtest(
             f"N≤{N_PER_ROUND} farms/round commissioned in [Y, Y+2], stratified by Bundesland wind "
             f"class; Path B resource (GWA + power curve); vintage costs from WindGuard series; "
             f"break-even AW at {HURDLE:.0%} equity IRR; representative market year "
-            f"{market.price_year} (flat hourly shape); §51 cohort by round date; seed {SEED}."
+f"round-year SMARD/Marktwerte (2017-18 rounds use 2019, the earliest complete year) "
+            f"(flat hourly shape); §51 cohort by round date; AW bracket [0.5, 12] ct/kWh; seed {SEED}."
         ),
     }
 
@@ -248,7 +275,8 @@ def main() -> int:
     if args.rounds:
         auctions = auctions.sort_values("round_date").head(args.rounds)
     vintages = pd.read_csv(manual / "cost_vintages.csv")
-    market = build_market_inputs(mart)
+    round_years = sorted({int(str(d)[:4]) for d in auctions["round_date"]})
+    market = {y: build_market_inputs(mart, year=y) for y in round_years}
 
     result = run_backtest(fw, auctions, vintages, market)
     out = Path(args.out)

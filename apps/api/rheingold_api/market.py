@@ -212,3 +212,44 @@ def cost_vintage(commissioning_year: int) -> CostVintage:
     table = _cost_vintages()
     year = min(max(commissioning_year, min(table)), max(table))
     return table[year]
+
+
+# --------------------------------------------------------------------------- auction awards
+@lru_cache(maxsize=1)
+def _auction_awards_by_year() -> dict[int, float]:
+    """Volume-weighted average Ø-Zuschlagswert (ct/kWh) per calendar year, from
+    the hand-compiled BNetzA ground truth (data/manual/bnetza_onshore_auctions.csv)."""
+    path = deps.repo_root() / "data" / "manual" / "bnetza_onshore_auctions.csv"
+    if not path.exists():
+        return {}
+    sums: dict[int, tuple[float, float]] = {}
+    with open(path, newline="", encoding="utf-8") as fh:
+        for row in csv.DictReader(fh):
+            if not row.get("avg_award_ct_kwh") or not row.get("volume_awarded_mw"):
+                continue
+            year = int(row["round_date"][:4])
+            vol = float(row["volume_awarded_mw"])
+            wsum, vsum = sums.get(year, (0.0, 0.0))
+            sums[year] = (wsum + float(row["avg_award_ct_kwh"]) * vol, vsum + vol)
+    return {y: round(w / v, 3) for y, (w, v) in sums.items() if v > 0}
+
+
+def auction_award_ct_kwh(commissioning_year: int) -> float | None:
+    """Real award-price default for the farm's AW: the volume-weighted average
+    across the BNetzA rounds ~2 years before commissioning (typical realization
+    lag), falling back to the commissioning year itself, then adjacent years.
+    None for pre-auction-era farms (engine then solves the break-even bid).
+    """
+    awards = _auction_awards_by_year()
+    if not awards:
+        return None
+    for candidate in (
+        commissioning_year - 2,
+        commissioning_year - 1,
+        commissioning_year,
+        commissioning_year - 3,
+        commissioning_year + 1,
+    ):
+        if candidate in awards:
+            return awards[candidate]
+    return None

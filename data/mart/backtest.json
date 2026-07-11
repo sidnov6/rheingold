@@ -1,0 +1,303 @@
+{
+ "rounds": [
+  {
+   "round_date": "2017-05-01",
+   "avg_award_ct_kwh": 5.71,
+   "max_price_ct_kwh": 7.0,
+   "model_median_ct_kwh": 5.537,
+   "model_p25_ct_kwh": 5.168,
+   "model_p75_ct_kwh": 6.064,
+   "n_farms": 38
+  },
+  {
+   "round_date": "2017-08-01",
+   "avg_award_ct_kwh": 4.28,
+   "max_price_ct_kwh": 7.0,
+   "model_median_ct_kwh": 5.187,
+   "model_p25_ct_kwh": 4.949,
+   "model_p75_ct_kwh": 5.814,
+   "n_farms": 40
+  },
+  {
+   "round_date": "2017-11-01",
+   "avg_award_ct_kwh": 3.82,
+   "max_price_ct_kwh": 7.0,
+   "model_median_ct_kwh": 5.55,
+   "model_p25_ct_kwh": 5.118,
+   "model_p75_ct_kwh": 6.113,
+   "n_farms": 37
+  },
+  {
+   "round_date": "2018-02-01",
+   "avg_award_ct_kwh": 4.73,
+   "max_price_ct_kwh": 6.3,
+   "model_median_ct_kwh": 5.418,
+   "model_p25_ct_kwh": 5.042,
+   "model_p75_ct_kwh": 6.024,
+   "n_farms": 37
+  },
+  {
+   "round_date": "2018-05-01",
+   "avg_award_ct_kwh": 5.73,
+   "max_price_ct_kwh": 6.3,
+   "model_median_ct_kwh": 5.341,
+   "model_p25_ct_kwh": 4.989,
+   "model_p75_ct_kwh": 6.054,
+   "n_farms": 37
+  },
+  {
+   "round_date": "2018-08-01",
+   "avg_award_ct_kwh": 6.16,
+   "max_price_ct_kwh": 6.3,
+   "model_median_ct_kwh": 5.396,
+   "model_p25_ct_kwh": 4.993,
+   "model_p75_ct_kwh": 6.159,
+   "n_farms": 39
+  },
+  {
+   "round_date": "2018-10-01",
+   "avg_award_ct_kwh": 6.26,
+   "max_price_ct_kwh": 6.3,
+   "model_median_ct_kwh": 5.479,
+   "model_p25_ct_kwh": 5.186,
+   "model_p75_ct_kwh": 6.118,
+   "n_farms": 37
+  },
+  {
+   "round_date": "2019-02-01",
+   "avg_award_ct_kwh": 6.11,
+   "max_price_ct_kwh": 6.2,
+   "model_median_ct_kwh": 4.784,
+   "model_p25_ct_kwh": 4.401,
+   "model_p75_ct_kwh": 5.48,
+   "n_farms": 40
+  },
+  {
+   "round_date": "2019-05-01",
+   "avg_award_ct_kwh": 6.13,
+   "max_price_ct_kwh": 6.2,
+   "model_median_ct_kwh": 4.752,
+   "model_p25_ct_kwh": 4.49,
+   "model_p75_ct_kwh": 5.266,
+   "n_farms": 39
+  },
+  {
+   "round_date": "2019-08-01",
+   "avg_award_ct_kwh": 6.2,
+   "max_price_ct_kwh": 6.2,
+   "model_median_ct_kwh": 4.886,
+   "model_p25_ct_kwh": 4.585,
+   "model_p75_ct_kwh": 5.527,
+   "n_farms": 40
+  },
+  {
+   "round_date": "2019-09-01",
+   "avg_award_ct_kwh": 6.19,
+   "max_price_ct_kwh": 6.2,
+   "model_median_ct_kwh": 4.622,
+   "model_p25_ct_kwh": 4.192,
+   "model_p75_ct_kwh": 5.165,
+   "n_farms": 40
+  },
+  {
+   "round_date": "2019-10-01",
+   "avg_award_ct_kwh": 6.2,
+   "max_price_ct_kwh": 6.2,
+   "model_median_ct_kwh": 4.785,
+   "model_p25_ct_kwh": 4.442,
+   "model_p75_ct_kwh": 5.315,
+   "n_farms": 39
+  },
+  {
+   "round_date": "2019-12-01",
+   "avg_award_ct_kwh": 6.11,
+   "max_price_ct_kwh": 6.2,
+   "model_median_ct_kwh": 4.846,
+   "model_p25_ct_kwh": 4.467,
+   "model_p75_ct_kwh": 5.287,
+   "n_farms": 39
+  },
+  {
+   "round_date": "2020-02-01",
+   "avg_award_ct_kwh": 6.18,
+   "max_price_ct_kwh": 6.2,
+   "model_median_ct_kwh": 4.538,
+   "model_p25_ct_kwh": 4.429,
+   "model_p75_ct_kwh": 5.179,
+   "n_farms": 38
+  },
+  {
+   "round_date": "2020-03-01",
+   "avg_award_ct_kwh": 6.07,
+   "max_price_ct_kwh": 6.2,
+   "model_median_ct_kwh": 4.842,
+   "model_p25_ct_kwh": 4.468,
+   "model_p75_ct_kwh": 5.145,
+   "n_farms": 37
+  },
+  {
+   "round_date": "2020-06-01",
+   "avg_award_ct_kwh": 6.14,
+   "max_price_ct_kwh": 6.2,
+   "model_median_ct_kwh": 4.69,
+   "model_p25_ct_kwh": 4.466,
+   "model_p75_ct_kwh": 5.264,
+   "n_farms": 36
+  },
+  {
+   "round_date": "2020-07-01",
+   "avg_award_ct_kwh": 6.14,
+   "max_price_ct_kwh": 6.2,
+   "model_median_ct_kwh": 4.704,
+   "model_p25_ct_kwh": 4.356,
+   "model_p75_ct_kwh": 5.176,
+   "n_farms": 39
+  },
+  {
+   "round_date": "2020-09-01",
+   "avg_award_ct_kwh": 6.2,
+   "max_price_ct_kwh": 6.2,
+   "model_median_ct_kwh": 4.844,
+   "model_p25_ct_kwh": 4.514,
+   "model_p75_ct_kwh": 5.383,
+   "n_farms": 38
+  },
+  {
+   "round_date": "2020-10-01",
+   "avg_award_ct_kwh": 6.11,
+   "max_price_ct_kwh": 6.2,
+   "model_median_ct_kwh": 4.6,
+   "model_p25_ct_kwh": 4.356,
+   "model_p75_ct_kwh": 4.999,
+   "n_farms": 38
+  },
+  {
+   "round_date": "2020-12-01",
+   "avg_award_ct_kwh": 5.91,
+   "max_price_ct_kwh": 6.2,
+   "model_median_ct_kwh": 4.806,
+   "model_p25_ct_kwh": 4.394,
+   "model_p75_ct_kwh": 5.594,
+   "n_farms": 35
+  },
+  {
+   "round_date": "2024-02-01",
+   "avg_award_ct_kwh": 7.34,
+   "max_price_ct_kwh": 7.35,
+   "model_median_ct_kwh": 7.505,
+   "model_p25_ct_kwh": 6.895,
+   "model_p75_ct_kwh": 7.783,
+   "n_farms": 6
+  },
+  {
+   "round_date": "2024-05-01",
+   "avg_award_ct_kwh": 7.33,
+   "max_price_ct_kwh": 7.35,
+   "model_median_ct_kwh": 6.692,
+   "model_p25_ct_kwh": 6.626,
+   "model_p75_ct_kwh": 6.922,
+   "n_farms": 5
+  }
+ ],
+ "skipped": [
+  {
+   "round_date": "2021-02-01",
+   "n_solvable": 0,
+   "reason": "break-even below 0.5 ct/kWh for nearly all farms \u2014 crisis-year spot levels clear the hurdle at any bid (flat-forward limitation)"
+  },
+  {
+   "round_date": "2021-05-01",
+   "n_solvable": 0,
+   "reason": "break-even below 0.5 ct/kWh for nearly all farms \u2014 crisis-year spot levels clear the hurdle at any bid (flat-forward limitation)"
+  },
+  {
+   "round_date": "2021-09-01",
+   "n_solvable": 0,
+   "reason": "break-even below 0.5 ct/kWh for nearly all farms \u2014 crisis-year spot levels clear the hurdle at any bid (flat-forward limitation)"
+  },
+  {
+   "round_date": "2022-02-01",
+   "n_solvable": 0,
+   "reason": "break-even below 0.5 ct/kWh for nearly all farms \u2014 crisis-year spot levels clear the hurdle at any bid (flat-forward limitation)"
+  },
+  {
+   "round_date": "2022-05-01",
+   "n_solvable": 0,
+   "reason": "break-even below 0.5 ct/kWh for nearly all farms \u2014 crisis-year spot levels clear the hurdle at any bid (flat-forward limitation)"
+  },
+  {
+   "round_date": "2022-09-01",
+   "n_solvable": 0,
+   "reason": "break-even below 0.5 ct/kWh for nearly all farms \u2014 crisis-year spot levels clear the hurdle at any bid (flat-forward limitation)"
+  },
+  {
+   "round_date": "2022-12-01",
+   "n_solvable": 0,
+   "reason": "break-even below 0.5 ct/kWh for nearly all farms \u2014 crisis-year spot levels clear the hurdle at any bid (flat-forward limitation)"
+  },
+  {
+   "round_date": "2023-02-01",
+   "n_solvable": 2,
+   "reason": "break-even below 0.5 ct/kWh for nearly all farms \u2014 crisis-year spot levels clear the hurdle at any bid (flat-forward limitation)"
+  },
+  {
+   "round_date": "2023-05-01",
+   "n_solvable": 1,
+   "reason": "break-even below 0.5 ct/kWh for nearly all farms \u2014 crisis-year spot levels clear the hurdle at any bid (flat-forward limitation)"
+  },
+  {
+   "round_date": "2023-08-01",
+   "n_solvable": 1,
+   "reason": "break-even below 0.5 ct/kWh for nearly all farms \u2014 crisis-year spot levels clear the hurdle at any bid (flat-forward limitation)"
+  },
+  {
+   "round_date": "2023-11-01",
+   "n_solvable": 0,
+   "reason": "break-even below 0.5 ct/kWh for nearly all farms \u2014 crisis-year spot levels clear the hurdle at any bid (flat-forward limitation)"
+  },
+  {
+   "round_date": "2024-08-01",
+   "n_solvable": 3,
+   "reason": "only 3 solvable bids in the sample"
+  },
+  {
+   "round_date": "2024-11-01",
+   "n_solvable": 4,
+   "reason": "only 4 solvable bids in the sample"
+  },
+  {
+   "round_date": "2025-02-01",
+   "n_solvable": 0,
+   "reason": "only 0 solvable bids in the sample"
+  },
+  {
+   "round_date": "2025-05-01",
+   "n_solvable": 2,
+   "reason": "only 2 solvable bids in the sample"
+  },
+  {
+   "round_date": "2025-08-01",
+   "n_solvable": 2,
+   "reason": "only 2 solvable bids in the sample"
+  },
+  {
+   "round_date": "2025-11-01",
+   "n_solvable": 1,
+   "reason": "only 1 solvable bids in the sample"
+  },
+  {
+   "round_date": "2026-02-01",
+   "n_solvable": 1,
+   "reason": "only 1 solvable bids in the sample"
+  },
+  {
+   "round_date": "2026-05-01",
+   "n_solvable": 3,
+   "reason": "only 3 solvable bids in the sample"
+  }
+ ],
+ "mae_ct_kwh": 1.101,
+ "directional_hit_rate": 0.55,
+ "generated_at": "2026-07-11T22:11:31+00:00",
+ "method_note": "N\u226440 farms/round commissioned in [Y, Y+2], stratified by Bundesland wind class; Path B resource (GWA + power curve); vintage costs from WindGuard series; break-even AW at 7% equity IRR; representative market year round-year SMARD/Marktwerte (2017-18 rounds use 2019, the earliest complete year) (flat hourly shape); \u00a751 cohort by round date; AW bracket [0.5, 12] ct/kWh; seed 42."
+}
