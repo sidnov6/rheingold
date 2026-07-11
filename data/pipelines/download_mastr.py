@@ -43,10 +43,12 @@ XML_DOWNLOAD_DIR = RAW_DIR / "data" / "xml_download"
 # Germany bounding box (generous, incl. islands): used only for QA reporting.
 DE_BBOX = {"lat_min": 47.2, "lat_max": 55.1, "lon_min": 5.8, "lon_max": 15.1}
 
-REQUIRED_TABLES = ("wind_extended", "market_actors")
+# market_actors (operator names) is optional: the full market download spans most
+# of the export's 58 files and can take hours on a throttled server; wind-only is
+# minutes. Run with --with-market to backfill operator names.
+REQUIRED_TABLES = ("wind_extended",)
 
-QUERY = """
-SELECT
+_SELECT_COMMON = """
     we.EinheitMastrNummer       AS unit_id,
     we.NameWindpark             AS farm_name,
     we.Breitengrad              AS lat,
@@ -58,20 +60,24 @@ SELECT
     we.Hersteller               AS manufacturer,
     we.Inbetriebnahmedatum      AS commissioning_date,
     we.Bundesland               AS bundesland,
-    COALESCE(
-        ma.Firmenname,
-        NULLIF(TRIM(COALESCE(ma.MarktakteurVorname, '') || ' '
-                    || COALESCE(ma.MarktakteurNachname, '')), '')
-    )                           AS operator,
+    {operator_expr}             AS operator,
     we.EinheitBetriebsstatus    AS status
 FROM wind_extended AS we
-LEFT JOIN market_actors AS ma
-    ON ma.MastrNummer = we.AnlagenbetreiberMastrNummer
+{join}
 WHERE we.WindAnLandOderAufSee = 'Windkraft an Land'
   AND we.EinheitBetriebsstatus = 'In Betrieb'
   AND we.Breitengrad IS NOT NULL
   AND we.Laengengrad IS NOT NULL
 """
+
+QUERY_WITH_MARKET = "SELECT" + _SELECT_COMMON.format(
+    operator_expr=(
+        "COALESCE(ma.Firmenname, NULLIF(TRIM(COALESCE(ma.MarktakteurVorname, '') || ' ' "
+        "|| COALESCE(ma.MarktakteurNachname, '')), ''))"
+    ),
+    join="LEFT JOIN market_actors AS ma ON ma.MastrNummer = we.AnlagenbetreiberMastrNummer",
+)
+QUERY_WIND_ONLY = "SELECT" + _SELECT_COMMON.format(operator_expr="NULL", join="")
 
 log = logging.getLogger("download_mastr")
 
@@ -101,14 +107,15 @@ def sqlite_has_tables(db_path: Path) -> bool:
         return False
 
 
-def download_bulk() -> None:
-    """Run the open-mastr bulk download (wind + market) into RAW_DIR."""
+def download_bulk(with_market: bool) -> None:
+    """Run the open-mastr bulk download into RAW_DIR."""
     os.environ["OUTPUT_PATH"] = str(RAW_DIR)
     from open_mastr import Mastr  # import after OUTPUT_PATH is set
 
-    log.info("downloading MaStR bulk export (wind + market) via open-mastr ...")
+    data = ["wind", "market"] if with_market else ["wind"]
+    log.info("downloading MaStR bulk export (%s) via open-mastr ...", "+".join(data))
     db = Mastr()
-    db.download(data=["wind", "market"], bulk_cleansing=True)
+    db.download(data=data, bulk_cleansing=True)
     if not sqlite_has_tables(SQLITE_PATH):
         raise RuntimeError(
             f"open-mastr download finished but {SQLITE_PATH} is missing required "
@@ -137,10 +144,24 @@ def snapshot_date() -> str:
     return dt.date.today().isoformat()
 
 
+def _has_market_actors(con: sqlite3.Connection) -> bool:
+    rows = con.execute(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='market_actors'"
+    ).fetchall()
+    if not rows:
+        return False
+    (n,) = con.execute("SELECT COUNT(*) FROM market_actors").fetchone()
+    return n > 0
+
+
 def extract_units() -> pd.DataFrame:
     con = sqlite3.connect(f"file:{SQLITE_PATH}?mode=ro", uri=True)
     try:
-        df = pd.read_sql_query(QUERY, con)
+        if _has_market_actors(con):
+            df = pd.read_sql_query(QUERY_WITH_MARKET, con)
+        else:
+            log.info("market_actors absent — operator column will be NULL (see --with-market)")
+            df = pd.read_sql_query(QUERY_WIND_ONLY, con)
     finally:
         con.close()
     if df.empty:
@@ -221,6 +242,11 @@ def main() -> int:
         action="store_true",
         help="force a fresh MaStR bulk download even if the cached sqlite exists",
     )
+    parser.add_argument(
+        "--with-market",
+        action="store_true",
+        help="also download market-actor tables for operator names (slow: most of the export)",
+    )
     args = parser.parse_args()
     logging.basicConfig(
         stream=sys.stderr,
@@ -230,7 +256,7 @@ def main() -> int:
 
     RAW_DIR.mkdir(parents=True, exist_ok=True)
     if args.refresh or not sqlite_has_tables(SQLITE_PATH):
-        download_bulk()
+        download_bulk(with_market=args.with_market)
     else:
         log.info("using cached sqlite at %s (pass --refresh to re-download)", SQLITE_PATH)
 
