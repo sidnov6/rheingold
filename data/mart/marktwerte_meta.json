@@ -1,0 +1,12 @@
+{
+  "source_url": "https://www.netztransparenz.de/DesktopModules/LotesCharts/Services/HighchartService.asmx/GetMarketpremiumData",
+  "page_url": "https://www.netztransparenz.de/de-de/Erneuerbare-Energien-und-Umlagen/EEG/Transparenzanforderungen/Marktpr%C3%A4mie/Marktwert%C3%BCbersicht",
+  "license_note": "no explicit open-data license; statutory EEG transparency publication; attribution 'Quelle: netztransparenz.de'",
+  "retrieved_at": "2026-07-11T13:45:12+00:00",
+  "coverage": {
+    "first_month": "2012-01-01",
+    "last_month": "2026-06-01",
+    "n_months": 174
+  },
+  "unit": "ct/kWh"
+}

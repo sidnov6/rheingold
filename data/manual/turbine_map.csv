@@ -1,0 +1,58 @@
+mastr_pattern,windpowerlib_type,match_rank,substitute,fallback_class,note
+E-?82\s*E-?1,E-82/2000,1,false,,Enercon E-82 E1 = 2.0 MW variant
+E-?82\s*E-?2,E-82/2300,1,false,,Enercon E-82 E2 = 2.3 MW variant
+E-?82\s*E-?3,E-82/3000,1,false,,Enercon E-82 E3 = 3.0 MW variant
+3.2M114,S114/3200,1,false,,Senvion 3.2M114 = S114/3200 in library naming
+3.4M114,S114/3400,1,false,,Senvion 3.4M114 = S114/3400
+3.0M122,S122/3000,1,false,,Senvion 3.0M122 = S122/3000
+3.2M122,S122/3200,1,false,,Senvion 3.2M122 = S122/3200
+3.4M122,S122/3200,1,true,,S122/3400 exists in library but has no power curve; S122/3200 nearest with curve
+3.0M114,S114/3200,1,true,,3.0M114 rating absent; S114/3200 nearest with curve
+SWT-?2.3-?113,SWT113/2300,1,false,,Siemens SWT-2.3-113
+SWT-?3.2-?113,SWT113/3200,1,false,,Siemens SWT-3.2-113
+2.75-?103,GE103/2750,1,false,,GE 2.75-103
+2.5-?120,GE120/2500,1,false,,GE 2.5-120
+3.2-?130,GE130/3200,1,false,,GE 3.2-130
+E-?40,E48/800,2,true,,E-40 (500-600 kW) absent from windpowerlib; E48/800 nearest small Enercon with curve
+E-?48,E48/800,2,false,,library id is E48/800 (no hyphen)
+E-?53,E-53/800,2,false,,
+E-?66,E-70/2000,2,true,,E-66 (1.5-2.0 MW) absent from library; E-70/2000 nearest by rating and rotor
+E-?70,E-70/2300,2,false,,kW-refined by select_turbine (2000/2300 variants)
+E-?82,E-82/2300,2,false,,most common variant; kW-refined (2000/2300/2350/3000)
+E-?92,E-92/2350,2,false,,
+E-?101,E-101/3050,2,false,,kW-refined (3050/3500)
+E-?115,E-115/3000,2,false,,kW-refined (3000/3200)
+E-?126,E-126/4200,2,false,,kW-refined (4200/7500/7580)
+E-?138,E-141/4200,2,true,,E-138 EP3 absent from library; E-141/4200 nearest rotor and rating
+E-?141,E-141/4200,2,false,,
+V-?80,V80/2000,2,false,,
+V-?90,V90/2000,2,false,,kW-refined (2000/3000)
+V-?100,V100/1800,2,false,,
+V-?112,V112/3000,2,false,,kW-refined (3000/3075/3300/3450)
+V-?117,V117/3450,2,false,,kW-refined (3300/3450/3600)
+V-?126,V126/3300,2,false,,kW-refined (3000/3300/3450)
+V-?136,V126/3450,2,true,,V136 in library without power curve; V126/3450 largest Vestas onshore rotor with curve
+V-?150,V126/3450,2,true,,V150 has no curve in library; expect CF underestimate (150 m vs 126 m rotor)
+V-?162,V126/3450,2,true,,V162 absent from library; largest Vestas onshore curve available
+N-?90,N90/2500,2,false,,
+N-?100,N100/2500,2,false,,
+N-?117,N117/2400,2,false,,only 2400 kW variant has a curve (N117/3000 and /3600 lack curves)
+N-?131,N131/3000,2,false,,kW-refined (3000/3300/3600)
+N-?133,N131/3300,2,true,,N133 absent from library; N131/3300 nearest
+N-?149,N131/3600,2,true,,N149 absent from library; N131/3600 nearest with curve
+MM-?82,MM92/2050,2,true,,MM82/2050 in library without power curve; MM92/2050 nearest with curve
+MM-?92,MM92/2050,2,false,,
+MM-?100,MM100/2000,2,false,,
+S-?104,S104/3400,3,false,,
+S-?114,S114/3200,3,false,,kW-refined (3200/3400)
+S-?122,S122/3200,3,false,,kW-refined (3000/3200)
+SWT.*113,SWT113/2300,3,false,,kW-refined (2300/3200)
+SWT.*120,SWT120/3600,3,false,,
+SWT.*130,SWT130/3300,3,false,,kW-refined (3300/3600)
+SWT.*142,SWT142/3150,3,false,,
+GE.*103,GE103/2750,3,false,,
+GE.*120,GE120/2500,3,false,,kW-refined (2500/2750)
+GE.*130,GE130/3200,3,false,,
+,E-115/3000,99,false,low,fallback: specific power < 300 W/m2 (low-wind design)
+,V112/3000,99,false,medium,fallback: 300-400 W/m2; also default when rotor/rating unknown
+,V90/2000,99,false,high,fallback: specific power >= 400 W/m2 (high-wind design)
