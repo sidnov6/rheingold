@@ -68,8 +68,14 @@ def _get_range(s: requests.Session, url: str, start: int, end: int) -> bytes:
             raise OSError(f"HTTP {r.status_code}, {len(r.content)} bytes for {want}")
         except (requests.RequestException, OSError) as exc:
             wait = min(60.0, 2.0**attempt)
-            log.warning("range %d-%d attempt %d failed (%s) — retry in %.0fs",
-                        start, end, attempt + 1, exc, wait)
+            log.warning(
+                "range %d-%d attempt %d failed (%s) — retry in %.0fs",
+                start,
+                end,
+                attempt + 1,
+                exc,
+                wait,
+            )
             time.sleep(wait)
     raise RuntimeError(f"range {start}-{end} failed after {RETRIES} attempts")
 
@@ -228,9 +234,7 @@ def fetch_wind_members(cache_root: Path) -> tuple[dict[str, bytes], str]:
 
     results: dict[str, bytes] = {}
     with ThreadPoolExecutor(max_workers=WORKERS) as pool:
-        futs = {
-            pool.submit(fetch_member, _session(), url, m, cache): m for m in wanted
-        }
+        futs = {pool.submit(fetch_member, _session(), url, m, cache): m for m in wanted}
         for fut in as_completed(futs):
             m = futs[fut]
             raw_path = fut.result()

@@ -198,8 +198,8 @@ def underwrite(
         breakeven = solve_breakeven_bid(farm, a, market, shocks)
         if breakeven is None:
             raise ValueError(
-                "no break-even AW in [2, 12] ct/kWh at the hurdle rate — "
-                "provide anzulegender_wert_ct_kwh explicitly"
+                f"no break-even AW in [{_BREAKEVEN_LO}, {_BREAKEVEN_HI}] ct/kWh at the "
+                "hurdle rate — provide anzulegender_wert_ct_kwh explicitly"
             )
         a = a.model_copy(update={"anzulegender_wert_ct_kwh": breakeven})
         # The tornado is anchored to the UNSHOCKED base (see sensitivity.py), so in

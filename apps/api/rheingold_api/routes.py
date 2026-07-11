@@ -106,12 +106,17 @@ def get_farm(farm_id: str) -> dict[str, Any]:
                 "note": resource.get("source"),
             }
         )
-    return {
-        "farm": _jsonable(farm),
-        "resource": _jsonable(resource),
-        "units": _jsonable(units),
-        "sources": sources,
-    }
+    # FarmDetail contract (apps/web/lib/types.ts): FLAT farm fields + nested
+    # resource + sources[{label,url}] + unit_ids list. `units` rides along as extra.
+    detail = _jsonable(farm)
+    detail.pop("unit_ids", None)
+    detail["unit_ids"] = unit_ids
+    detail["resource"] = _jsonable(resource)
+    detail["sources"] = [
+        {"label": s["label"], "url": s["url"], "license": s.get("note")} for s in sources
+    ]
+    detail["units"] = _jsonable(units)
+    return detail
 
 
 def _jsonable(obj: Any) -> Any:
@@ -191,7 +196,18 @@ def build_underwrite(body: UnderwriteRequest) -> UnderwriteResult:
         assumptions = assumptions_from_defaults(overrides)
         shocks = Shocks(**(body.shocks or {}))
         market_inputs = market.market_inputs(body.farm_id)
-        return underwrite(farm, assumptions, market_inputs, shocks)
+        try:
+            return underwrite(farm, assumptions, market_inputs, shocks)
+        except ValueError as exc:
+            user_set_aw = "anzulegender_wert_ct_kwh" in (body.assumptions_overrides or {})
+            if aw_default is None and not user_set_aw and "break-even" in str(exc):
+                # Pre-auction-era farm whose break-even sits below the bracket at
+                # current price levels: underwrite as a merchant project instead.
+                # The historical statutory EEG tariff is NOT modeled (MODEL_CARD);
+                # the evidence store shows revenue_mode=merchant transparently.
+                assumptions = assumptions.model_copy(update={"revenue_mode": "merchant"})
+                return underwrite(farm, assumptions, market_inputs, shocks)
+            raise
     except market.MarketDataError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
     except (ValueError, TypeError) as exc:

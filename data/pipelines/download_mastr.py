@@ -203,7 +203,9 @@ def extract_units_from_zip() -> tuple[pd.DataFrame, str]:
             }
         )
     if not recs:
-        raise RuntimeError("zip extraction yielded 0 onshore in-operation units — refusing to write")
+        raise RuntimeError(
+            "zip extraction yielded 0 onshore in-operation units — refusing to write"
+        )
     return _finalize(pd.DataFrame(recs)), snapshot
 
 

@@ -68,6 +68,12 @@ the agent layer only narrates evidence the engine produced.
 6. **Repowering, curtailment contracts, balancing costs:** out of scope.
 7. **Backtest caveats:** winner's curse, undersubscribed rounds 2019–2022,
    binding Höchstwert post-2022, site-selection bias (registry ≠ bid pipeline).
+8. **Pre-auction-era farms (COD < 2017):** their statutory EEG feed-in tariffs
+   are not modeled. The API underwrites them at the break-even bid when it
+   exists, else as pure merchant projects at the representative market year —
+   the evidence store shows `revenue_mode` transparently. Auction-era farms
+   default to the real volume-weighted Ø-Zuschlagswert of the rounds ~2 years
+   before commissioning (typical realization lag).
 
 ## Agent layer limits
 

@@ -190,13 +190,14 @@ def test_farm_dossier_shape_and_sources(client: TestClient) -> None:
     r = client.get("/api/farm/wp-synthpark-a")
     assert r.status_code == 200
     body = r.json()
-    assert body["farm"]["mw_total"] == 12.6
+    # FLAT FarmDetail contract (apps/web/lib/types.ts)
+    assert body["mw_total"] == 12.6
     assert body["resource"]["method"] == "gwa_windpowerlib"
     assert len(body["units"]) == 3
+    assert body["unit_ids"] == sorted(body["unit_ids"]) and len(body["unit_ids"]) == 3
     mastr = [s for s in body["sources"] if s["label"] == "MaStR Registereintrag"]
     assert len(mastr) == 3
     assert all(s["url"] == "https://www.marktstammdatenregister.de/MaStR" for s in mastr)
-    assert mastr[0]["unit_id"] == "SEE900000000001"
 
 
 # ------------------------------------------------------------------ underwrite

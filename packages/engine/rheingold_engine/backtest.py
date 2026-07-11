@@ -241,7 +241,7 @@ def run_backtest(
             f"N≤{N_PER_ROUND} farms/round commissioned in [Y, Y+2], stratified by Bundesland wind "
             f"class; Path B resource (GWA + power curve); vintage costs from WindGuard series; "
             f"break-even AW at {HURDLE:.0%} equity IRR; representative market year "
-f"round-year SMARD/Marktwerte (2017-18 rounds use 2019, the earliest complete year) "
+            f"round-year SMARD/Marktwerte (2017-18 rounds use 2019, the earliest complete year) "
             f"(flat hourly shape); §51 cohort by round date; AW bracket [0.5, 12] ct/kWh; seed {SEED}."
         ),
     }
