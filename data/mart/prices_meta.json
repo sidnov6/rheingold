@@ -1,0 +1,9 @@
+{
+  "source": "SMARD chart_data API, filter 4169 (day-ahead price DE/LU), https://www.smard.de/app/chart_data/4169/DE/",
+  "license": "CC BY 4.0",
+  "attribution": "Bundesnetzagentur | SMARD.de",
+  "retrieved_at": "2026-07-11T18:51:55.710238+00:00",
+  "first_ts": "2018-09-30T22:00:00",
+  "last_ts": "2026-07-12T21:00:00",
+  "n_hours": 68208
+}

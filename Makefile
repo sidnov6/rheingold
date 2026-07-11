@@ -1,12 +1,14 @@
 .PHONY: data engine-test agents-test api-test test dev dev-api dev-web backtest showcase deploy lint
 
-# ---- data pipelines (order matters: fleet before resource) ----
+# ---- data pipelines (order matters: units before fleet before resource) ----
 data:
 	uv run python data/pipelines/download_mastr.py
 	uv run python data/pipelines/download_smard.py
 	uv run python data/pipelines/marktwerte.py
+	uv run python data/pipelines/gwa_download.py
 	uv run python data/pipelines/build_fleet.py
 	uv run python data/pipelines/resource.py
+	uv run python data/pipelines/build_mart.py
 
 # ---- tests ----
 engine-test:
