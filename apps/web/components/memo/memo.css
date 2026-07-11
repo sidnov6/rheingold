@@ -1,0 +1,84 @@
+/*
+ * Memo-scoped keyframes + print pipeline (§3.3, §9.7).
+ * Reduced-motion is handled globally in app/globals.css (animations forced to
+ * 0.01ms), so every animation here is automatically disabled for those users.
+ */
+
+/* Verdict stamp: single 250ms scale + rotate settle (§3.3) */
+@keyframes memo-stamp-in {
+  0% {
+    opacity: 0;
+    transform: rotate(2deg) scale(1.6);
+  }
+  70% {
+    opacity: 1;
+    transform: rotate(-4deg) scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: rotate(-3deg) scale(1);
+  }
+}
+.memo-stamp {
+  transform: rotate(-3deg);
+  animation: memo-stamp-in 250ms cubic-bezier(0, 0, 0.2, 1) both;
+}
+
+/* Thin gold caret while the memo streams */
+@keyframes memo-caret-blink {
+  0%,
+  55% {
+    opacity: 1;
+  }
+  56%,
+  100% {
+    opacity: 0;
+  }
+}
+.memo-caret {
+  display: inline-block;
+  width: 2px;
+  height: 1.05em;
+  margin-left: 2px;
+  vertical-align: text-bottom;
+  background: var(--gold-500);
+  animation: memo-caret-blink 900ms steps(1) infinite;
+}
+
+/* Agent running status: subtle pulse dot */
+@keyframes memo-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+.memo-pulse-dot {
+  animation: memo-pulse 1.6s ease-in-out infinite;
+}
+
+/* Print: hide the terminal chrome, let the paper own the page (§9.7 export) */
+@media print {
+  nav,
+  .memo-no-print {
+    display: none !important;
+  }
+  body,
+  html {
+    background: white !important; /* print export: plain white page, not a token */
+  }
+  main {
+    overflow: visible !important;
+  }
+  .memo-paper-frame {
+    border: none !important;
+    padding: 0 !important;
+    max-width: 100% !important;
+  }
+  .memo-paper {
+    border: none !important;
+    max-width: 100% !important;
+  }
+}
