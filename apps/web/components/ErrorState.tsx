@@ -4,17 +4,15 @@ import clsx from "clsx";
  * ErrorState (§3.4). Quiet, honest failure panel — no gold, no drama.
  * Used wherever an API call fails or a data artifact is absent.
  */
-export function ErrorState({
-  title,
-  detail,
-  hint,
-  className,
-}: {
+export interface ErrorStateProps {
   title: string;
   detail?: string;
   hint?: string;
+  action?: React.ReactNode;
   className?: string;
-}) {
+}
+
+export function ErrorState({ title, detail, hint, action, className }: ErrorStateProps) {
   return (
     <div
       role="alert"
@@ -35,6 +33,9 @@ export function ErrorState({
           {hint}
         </p>
       )}
+      {action && <div className="mt-3">{action}</div>}
     </div>
   );
 }
+
+export default ErrorState;

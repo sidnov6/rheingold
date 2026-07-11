@@ -108,7 +108,7 @@ def sample_round_farms(
         return pool
     # stratified: proportional by wind class, at least 1 per non-empty class
     takes = []
-    for cls, group in pool.groupby(pool["bundesland"].map(wind_class)):
+    for _cls, group in pool.groupby(pool["bundesland"].map(wind_class)):
         share = len(group) / len(pool)
         k = min(len(group), max(1, round(N_PER_ROUND * share)))
         takes.append(group.sample(n=k, random_state=int(rng.integers(0, 2**32 - 1))))
