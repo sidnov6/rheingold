@@ -5,14 +5,14 @@ Sculpting: DS_t = CFADS_t / target for t = 1..T → capacity D0 = Σ DS_t/(1+r)^
 Gearing cap: D = min(D0, max_gearing × capex); when the cap binds, DS is
 rescaled uniformly so PV(DS) = D (DSCR rises above target uniformly).
 
-Principal floor: if rolling the sculpted schedule forward produces negative
-principal (back-loaded CFADS), those years become interest-only (P_t = 0) and
-the remaining years' payments are re-solved so B_T = 0. Implementation: the
-sculpted shape is DS_t(s) = max(s × CFADS_t, I_t) and s is found by bisection
-so the terminal balance is zero (s = 1/target on the exact path where the floor
-never binds — the golden farm hits the closed-form branch, no iteration error).
-Years where the floor binds report DSCR_t = CFADS_t / I_t, which may sit below
-target — reported honestly rather than hidden.
+Principal floor: the sculpted shape is DS_t = max(s × CFADS_t, I_t) with
+s = drawn/D0/target (= 1/target when the cap does not bind), so principal is
+never negative — years where the floor binds are interest-only and report
+DSCR_t = CFADS_t / I_t below target (honest, not smoothed). Because PV(s·CFADS)
+at the loan rate equals the draw exactly and the floor can only add payments,
+the terminal balance is never positive; overshoot retires the loan early
+(trailing DS = 0, DSCR = None inside the tenor). No iteration — the golden farm
+and every feasible case hit the closed-form path exactly.
 """
 
 from __future__ import annotations
@@ -20,7 +20,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 _EPS_BAL = 1e-6  # EUR — terminal-balance tolerance
-_MAX_BISECT = 200
 
 
 @dataclass(frozen=True)
@@ -93,42 +92,14 @@ def sculpt(
     debt = min(d0, cap)
 
     # Closed-form branch: uniform s with no floor binding.
+    # _roll clamps DS_t = max(s·CFADS_t, I_t) and clips the final overshoot, so the
+    # schedule always amortizes exactly: when the interest-only floor binds early,
+    # the constant-DSCR payments in later years retire the loan EARLY (DS = 0,
+    # DSCR = None in the trailing years) rather than re-sculpting to land at T.
+    # That early-payoff convention is deliberate — coverage is reported honestly
+    # (sub-target DSCR in interest-only years) instead of being smoothed away.
     s0 = (debt / d0) / target_dscr  # = 1/target when cap not binding
     interest, principal, service, balance = _roll(debt, cfads, tenor, rate, s0)
-    if any(p < -1e-9 for p in principal) or abs(balance) > _EPS_BAL:
-        # Floor binds somewhere (or rounding): bisect s so terminal balance = 0.
-        lo, hi = 0.0, 1.0 / target_dscr
-        # B_T(s) is decreasing in s; ensure hi amortizes fully
-        interest, principal, service, bal_hi = _roll(debt, cfads, tenor, rate, hi)
-        if bal_hi > _EPS_BAL:
-            # even max debt service cannot amortize: reduce the draw by bisection on debt
-            d_lo, d_hi = 0.0, debt
-            for _ in range(_MAX_BISECT):
-                mid = 0.5 * (d_lo + d_hi)
-                *_, bal_mid = _roll(mid, cfads, tenor, rate, hi)
-                if bal_mid > 0:
-                    d_hi = mid
-                else:
-                    d_lo = mid
-                if d_hi - d_lo < _EPS_BAL:
-                    break
-            debt = d_lo
-        for _ in range(_MAX_BISECT):
-            s = 0.5 * (lo + hi)
-            interest, principal, service, balance = _roll(debt, cfads, tenor, rate, s)
-            if balance > 0:
-                lo = s
-            else:
-                hi = s
-            if abs(balance) < _EPS_BAL:
-                break
-        interest, principal, service, balance = _roll(debt, cfads, tenor, rate, hi)
-        # absorb the residual into the final principal payment
-        if principal:
-            principal[-1] += max(0.0, balance)
-            service[-1] += max(0.0, balance)
-            balance = 0.0
-
     assert abs(balance) <= max(_EPS_BAL, 1.0), f"debt not amortized: B_T = {balance}"
 
     dsra = (dsra_months / 12.0) * (sum(service) / len(service)) if service else 0.0

@@ -88,7 +88,7 @@ def tornado(
 
     def span(item: TornadoItem) -> float:
         if item.irr_low is None or item.irr_high is None:
-            return float("inf")  # unknown span sorts first — visible, not hidden
+            return float("-inf")  # unknown span sorts first — visible, not hidden
         return -abs(item.irr_high - item.irr_low)
 
     return sorted(items, key=lambda i: (span(i), i.variable))

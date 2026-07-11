@@ -20,6 +20,20 @@ the agent layer only narrates evidence the engine produced.
 - **Tax circularity:** tax needs interest, interest needs debt sizing, sizing
   needs after-tax CFADS. Resolved with exactly two deterministic passes
   (sculpt pre-tax → tax → re-sculpt once). Not iterated to convergence.
+- **Inflation convention (deliberate deviation from the literal §8.4 text):**
+  fixed opex escalates as `(1+infl)^(t−1)` — year 1 runs at today's price
+  level, the standard modeling convention — where the spec text reads
+  `(1+infl)^t`. Declared per the CLAUDE.md rule: the spec text changed, not
+  the engine. (Golden farm is unaffected: its inflation is 0.)
+- **Debt sculpting principal floor:** DS_t = max(s·CFADS_t, I_t). Years where
+  the interest-only floor binds report DSCR below target honestly; the extra
+  payments retire the loan *early* (trailing DS = 0 inside the tenor) rather
+  than re-sculpting to land exactly at maturity.
+- **Tornado sensitivities** are anchored to the *unshocked* base case — the
+  sliders answer "what if the world moves", the tornado answers "what is this
+  deal structurally sensitive to". In break-even mode the tornado's AW is
+  therefore solved without scenario shocks, while the headline result uses the
+  shock-consistent break-even bid.
 - **§51 negative-price rule:** modeled as a single config int
   (`neg_price_rule_hours`) applied to the representative price year's streaks.
   The cohort mapping (verified against §§51/51a/100 EEG, Clearingstelle FAQ 264,

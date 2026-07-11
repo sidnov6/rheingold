@@ -399,8 +399,7 @@ def test_effective_life_matrix():
     assert _effective_life(off.model_copy(update={"debt_tenor_years": 20})) == 20  # boundary OK
     # life < support (tenor shortened to stay feasible — tenor > life raises by design)
     assert (
-        _effective_life(off.model_copy(update={"lifetime_years": 15, "debt_tenor_years": 12}))
-        == 15
+        _effective_life(off.model_copy(update={"lifetime_years": 15, "debt_tenor_years": 12})) == 15
     )
     # merchant / ppa modes never truncate on merchant_tail
     assert _effective_life(Assumptions(revenue_mode="merchant", merchant_tail=False)) == 25

@@ -189,6 +189,7 @@ def underwrite(
     a = assumptions
 
     breakeven: float | None
+    tornado_assumptions = a
     if a.revenue_mode == "eeg_premium" and a.anzulegender_wert_ct_kwh is None:
         breakeven = solve_breakeven_bid(farm, a, market, shocks)
         if breakeven is None:
@@ -197,8 +198,22 @@ def underwrite(
                 "provide anzulegender_wert_ct_kwh explicitly"
             )
         a = a.model_copy(update={"anzulegender_wert_ct_kwh": breakeven})
+        # The tornado is anchored to the UNSHOCKED base (see sensitivity.py), so in
+        # break-even mode its AW must be solved without scenario shocks — otherwise
+        # the shock vector leaks into the "structural" sensitivities via the bid.
+        unshocked_aw = breakeven
+        if shocks != Shocks():
+            unshocked_aw = solve_breakeven_bid(farm, tornado_assumptions, market, Shocks())
+        if unshocked_aw is None:
+            unshocked_aw = (
+                breakeven  # degenerate: keep the deal computable, sensitivity approximate
+            )
+        tornado_assumptions = tornado_assumptions.model_copy(
+            update={"anzulegender_wert_ct_kwh": unshocked_aw}
+        )
     else:
         breakeven = solve_breakeven_bid(farm, a, market, shocks)
+        tornado_assumptions = a
 
     core = _Core(farm, a, market, shocks)
 
@@ -259,7 +274,7 @@ def underwrite(
     )
 
     energy = core.energy
-    tornado = tornado_mod(farm, a, market, _tornado_irr)
+    tornado = tornado_mod(farm, tornado_assumptions, market, _tornado_irr)
     evidence = build_evidence(farm, a, shocks, annual, energy, debt, valuation)
 
     return UnderwriteResult(
