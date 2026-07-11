@@ -33,9 +33,7 @@ CITATION_RE = re.compile(r"\[E:([A-Za-z0-9_.\-]+)\]")
 _ISO_DATE_RE = re.compile(r"\b\d{4}-\d{2}-\d{2}\b")
 
 # Longest alternatives first so e.g. "MWh" wins over "MW", "EUR/MWh" over "EUR".
-_UNIT_PATTERN = (
-    r"ct/kWh|EUR/MWh|€/MWh|Mio\.?\s?€|M€|k€|EUR|GWh|MWh|MW|bps|pp|%|×|x(?![\w])|€"
-)
+_UNIT_PATTERN = r"ct/kWh|EUR/MWh|€/MWh|Mio\.?\s?€|M€|k€|EUR|GWh|MWh|MW|bps|pp|%|×|x(?![\w])|€"
 NUMERIC_RE = re.compile(
     rf"(?<![\w§.,])(?P<sign>[-−])?(?P<num>\d{{1,3}}(?:,\d{{3}})+(?:\.\d+)?|\d+(?:\.\d+)?)"
     rf"[ \t]*(?P<unit>{_UNIT_PATTERN})?"

@@ -37,7 +37,9 @@ class Assumptions(BaseModel):
     lifetime_years: int = 25
     availability: float = 0.97  # energy availability — Suzlon-informed default
     electrical_losses: float = 0.02
-    wake_losses: float = 0.06  # farm-level if CF is single-turbine based; 0 if CF already farm-level
+    wake_losses: float = (
+        0.06  # farm-level if CF is single-turbine based; 0 if CF already farm-level
+    )
     curtailment_redispatch: float = 0.02
     degradation_pa: float = 0.002
     capex_eur_per_mw: float = 1_650_000.0
@@ -79,7 +81,9 @@ class MarketInputs(BaseModel):
     cf_shape_hourly: list[float]  # same length, sums to 1.0 — share of annual energy per hour
     hour_month: list[int]  # month index 0..11 per hour (calendar of the representative year)
     marktwert_ct_kwh_by_month: list[float]  # len 12 — MW Wind an Land reference
-    price_path: list[float] | None = None  # multiplicative price level per project year; None → all 1.0
+    price_path: list[float] | None = (
+        None  # multiplicative price level per project year; None → all 1.0
+    )
     price_year: int | None = None  # calendar year the hourly series comes from (provenance)
     source_note: str = ""
 

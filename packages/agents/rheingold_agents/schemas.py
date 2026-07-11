@@ -50,7 +50,9 @@ class MemoSection(BaseModel):
 
     key: str = Field(description="Stable section key, e.g. 'risks_mitigants'")
     title: str
-    markdown: str = Field(description="Section body. Every numeric literal needs an [E:ID] citation.")
+    markdown: str = Field(
+        description="Section body. Every numeric literal needs an [E:ID] citation."
+    )
 
 
 class Condition(BaseModel):

@@ -1,7 +1,6 @@
 """Shared fixtures for engine tests. All synthetic — clearly-labeled test artifacts."""
 
 import pytest
-
 from rheingold_engine.models import Assumptions, FarmInput, MarketInputs
 
 

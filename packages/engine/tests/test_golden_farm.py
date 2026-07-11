@@ -39,7 +39,6 @@ import math
 
 import numpy_financial as npf
 import pytest
-
 from rheingold_engine import underwrite
 from rheingold_engine.models import Assumptions, FarmInput, MarketInputs, Shocks
 
@@ -170,10 +169,7 @@ def test_dscr_flat_at_target(golden):
 
 def test_debt_fully_amortized(golden):
     tenor = 15
-    balance_after = (
-        golden.annual.debt_balance_bop[tenor - 1]
-        - golden.annual.principal[tenor - 1]
-    )
+    balance_after = golden.annual.debt_balance_bop[tenor - 1] - golden.annual.principal[tenor - 1]
     assert balance_after == pytest.approx(0.0, abs=1.0)  # EUR-level zero
     for p in golden.annual.principal[:tenor]:
         assert p >= -1e-9
