@@ -154,6 +154,59 @@ def _has_market_actors(con: sqlite3.Connection) -> bool:
     return n > 0
 
 
+def extract_units_from_zip() -> tuple[pd.DataFrame, str]:
+    """Default path: resumable range-fetch of EinheitenWind + catalogs (mastr_zip_fetch).
+
+    The BNetzA server throttles per IP and drops connections; open-mastr's serial
+    member download starves on bad days. This path transfers ~8 MB total.
+    Operator NAMES need the market-actor tables (not fetched here) — we keep the
+    AnlagenbetreiberMastrNummer for later backfill and leave operator NULL.
+    """
+    from mastr_zip_fetch import fetch_wind_members, parse_katalog, parse_wind_units
+
+    xml_by_name, snapshot = fetch_wind_members(RAW_DIR)
+    kat = parse_katalog(xml_by_name)
+    raw_rows = parse_wind_units(xml_by_name)
+
+    def resolve(value: str | None) -> str | None:
+        if value is None:
+            return None
+        return kat.get(value, value)
+
+    recs = []
+    for r in raw_rows:
+        if resolve(r.get("WindAnLandOderAufSee")) != "Windkraft an Land":
+            continue
+        if resolve(r.get("EinheitBetriebsstatus")) != "In Betrieb":
+            continue
+        if not r.get("Breitengrad") or not r.get("Laengengrad"):
+            continue
+        nn = r.get("Nettonennleistung")
+        if not nn:
+            continue
+        recs.append(
+            {
+                "unit_id": r.get("EinheitMastrNummer"),
+                "farm_name": r.get("NameWindpark"),
+                "lat": float(r["Breitengrad"]),
+                "lon": float(r["Laengengrad"]),
+                "mw": float(nn) / 1000.0,
+                "hub_height_m": float(r["Nabenhoehe"]) if r.get("Nabenhoehe") else None,
+                "rotor_d_m": float(r["Rotordurchmesser"]) if r.get("Rotordurchmesser") else None,
+                "turbine_type": r.get("Typenbezeichnung"),
+                "manufacturer": resolve(r.get("Hersteller")),
+                "commissioning_date": r.get("Inbetriebnahmedatum"),
+                "bundesland": resolve(r.get("Bundesland")),
+                "operator": None,
+                "operator_mastr_nr": r.get("AnlagenbetreiberMastrNummer"),
+                "status": "In Betrieb",
+            }
+        )
+    if not recs:
+        raise RuntimeError("zip extraction yielded 0 onshore in-operation units — refusing to write")
+    return _finalize(pd.DataFrame(recs)), snapshot
+
+
 def extract_units() -> pd.DataFrame:
     con = sqlite3.connect(f"file:{SQLITE_PATH}?mode=ro", uri=True)
     try:
@@ -166,6 +219,11 @@ def extract_units() -> pd.DataFrame:
         con.close()
     if df.empty:
         raise RuntimeError("query returned 0 onshore in-operation units — refusing to write")
+    df["operator_mastr_nr"] = None
+    return _finalize(df)
+
+
+def _finalize(df: pd.DataFrame) -> pd.DataFrame:
 
     n0 = len(df)
     df = df.drop_duplicates(subset="unit_id", keep="first")
@@ -192,6 +250,7 @@ def extract_units() -> pd.DataFrame:
             "manufacturer": "string",
             "bundesland": "string",
             "operator": "string",
+            "operator_mastr_nr": "string",
             "status": "string",
         }
     )
@@ -245,7 +304,12 @@ def main() -> int:
     parser.add_argument(
         "--with-market",
         action="store_true",
-        help="also download market-actor tables for operator names (slow: most of the export)",
+        help="(open-mastr path) also download market-actor tables for operator names (slow)",
+    )
+    parser.add_argument(
+        "--via-openmastr",
+        action="store_true",
+        help="use the open-mastr library instead of the default resumable zip range-fetch",
     )
     args = parser.parse_args()
     logging.basicConfig(
@@ -255,12 +319,16 @@ def main() -> int:
     )
 
     RAW_DIR.mkdir(parents=True, exist_ok=True)
-    if args.refresh or not sqlite_has_tables(SQLITE_PATH):
-        download_bulk(with_market=args.with_market)
+    if args.via_openmastr:
+        if args.refresh or not sqlite_has_tables(SQLITE_PATH):
+            download_bulk(with_market=args.with_market)
+        else:
+            log.info("using cached sqlite at %s (pass --refresh to re-download)", SQLITE_PATH)
+        df = extract_units()
+        snapshot = snapshot_date()
     else:
-        log.info("using cached sqlite at %s (pass --refresh to re-download)", SQLITE_PATH)
-
-    df = extract_units()
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        df, snapshot = extract_units_from_zip()
     qa_report(df)
 
     MART_PATH.parent.mkdir(parents=True, exist_ok=True)
@@ -268,7 +336,7 @@ def main() -> int:
     log.info("wrote %s (%d rows)", MART_PATH, len(df))
 
     meta = {
-        "snapshot_date": snapshot_date(),
+        "snapshot_date": snapshot,
         "n_units": int(len(df)),
         "total_mw": round(float(df["mw"].sum()), 3),
         "license": "DL-DE/BY-2.0",

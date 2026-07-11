@@ -291,6 +291,21 @@ def build_farms(units: pd.DataFrame) -> pd.DataFrame:
     log.info("unnamed -> %d clusters (>=2 units) + %d singletons", n_clusters, n_singletons)
 
     farms = pd.DataFrame.from_records(records)
+    # Distinct real-world parks can normalize to the same slug (e.g. two different
+    # "Windpark Hof 1"), and the >5km-split suffixes can collide with them too.
+    # Deterministic uniquification: duplicates get a short hash of their member
+    # unit ids appended — stable across runs, nothing merged or hidden.
+    dup_mask = farms["farm_id"].duplicated(keep=False)
+    if dup_mask.any():
+        import hashlib
+        import json as _json
+
+        n_fixed = int(dup_mask.sum())
+        for idx in farms.index[dup_mask]:
+            uids = "".join(sorted(_json.loads(farms.at[idx, "unit_ids"])))
+            suffix = hashlib.sha1(uids.encode()).hexdigest()[:6]
+            farms.at[idx, "farm_id"] = f"{farms.at[idx, 'farm_id']}-{suffix}"
+        log.info("uniquified %d colliding farm_ids with unit-id hashes", n_fixed)
     dupes = farms[farms["farm_id"].duplicated(keep=False)]
     if not dupes.empty:
         raise RuntimeError(f"duplicate farm_ids produced: {sorted(dupes['farm_id'].unique())[:10]}")
@@ -411,6 +426,14 @@ def main(argv: list[str] | None = None) -> int:
     )
 
     write_fleet_json(farms, args.fleet_json)
+    # Second copy in data/mart/ — the API's /api/fleet passthrough source (§10);
+    # the apps/web/public/ copy is the zero-API showcase path (§15).
+    mart_fleet = REPO_ROOT / "data" / "mart" / "fleet.json.gz"
+    if args.fleet_json != mart_fleet:
+        import shutil
+
+        shutil.copy2(args.fleet_json, mart_fleet)
+        log.info("copied fleet.json.gz to %s", mart_fleet)
     meta = {
         "unit_count": int(len(units)),
         "farm_count": int(len(farms)),
@@ -420,6 +443,9 @@ def main(argv: list[str] | None = None) -> int:
     }
     args.fleet_meta.parent.mkdir(parents=True, exist_ok=True)
     args.fleet_meta.write_text(json.dumps(meta, indent=2) + "\n", encoding="utf-8")
+    mart_meta = REPO_ROOT / "data" / "mart" / "fleet_meta.json"
+    if args.fleet_meta != mart_meta:
+        mart_meta.write_text(json.dumps(meta, indent=2) + "\n", encoding="utf-8")
     log.info("wrote %s: %s", args.fleet_meta, meta)
     return 0
 

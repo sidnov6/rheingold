@@ -1,0 +1,13 @@
+{
+  "method": "gwa_windpowerlib",
+  "shear_alpha": 0.2,
+  "weibull_k": 2.0,
+  "gwa_tif": "/Users/sid/Developer/RheinGold/data/raw/gwa/DEU_wind-speed_100m.tif",
+  "n_farms": 11107,
+  "n_with_cf": 11104,
+  "built_at": "2026-07-11T21:59:59+00:00",
+  "attribution": [
+    "Global Wind Atlas 4.0 (DTU), CC BY 4.0",
+    "windpowerlib oedb turbine library"
+  ]
+}
