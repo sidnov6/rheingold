@@ -7,7 +7,7 @@ sdk: docker
 app_port: 7860
 pinned: false
 license: mit
-short_description: Underwriting the Energiewende — cited IC memos for German wind
+short_description: Cited IC memos for German onshore wind farms
 ---
 
 # RHEINGOLD
