@@ -269,15 +269,32 @@ def test_market_chart_payload_shape(client: TestClient) -> None:
 
 
 # ------------------------------------------------------------------ memo SSE
-def test_memo_without_api_key_streams_error_event(
+def test_memo_without_provider_streams_error_event(
     client: TestClient, monkeypatch: pytest.MonkeyPatch
 ) -> None:
+    # No provider at all → clear degraded error (both keys absent)
     monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    monkeypatch.delenv("GROQ_API_KEY", raising=False)
     with client.stream("POST", "/api/memo", json={"farm_id": "wp-synthpark-a"}) as r:
         assert r.status_code == 200
         body = "".join(chunk for chunk in r.iter_text())
     assert "event: error" in body
-    assert "ANTHROPIC_API_KEY" in body
+    assert "GROQ_API_KEY" in body and "ANTHROPIC_API_KEY" in body
+
+
+def test_memo_with_groq_provider_proceeds_past_gate(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """With a provider configured, the stream must get past the key check to the
+    gate event (it then fails at the real network call, which is fine here)."""
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    monkeypatch.setenv("GROQ_API_KEY", "gsk-test-not-real")
+    with client.stream("POST", "/api/memo", json={"farm_id": "wp-synthpark-a"}) as r:
+        assert r.status_code == 200
+        body = "".join(chunk for chunk in r.iter_text())
+    # reached the deterministic gate → the provider gate did NOT short-circuit
+    assert "event: gate" in body
+    assert "No LLM provider configured" not in body
 
 
 # ------------------------------------------------------------------ backtest

@@ -11,7 +11,6 @@ from __future__ import annotations
 
 import asyncio
 import json
-import os
 from collections.abc import AsyncIterator
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any
@@ -20,6 +19,7 @@ import anyio
 from fastapi import HTTPException
 from rheingold_agents import compliance_gate
 from rheingold_agents.orchestrator import run_debate
+from rheingold_agents.providers import provider_name
 
 from . import deps, market
 
@@ -34,14 +34,14 @@ def _sse(event: str, payload: dict[str, Any]) -> dict[str, str]:
 
 
 async def memo_event_stream(body: UnderwriteRequest) -> AsyncIterator[dict[str, str]]:
-    if not os.environ.get("ANTHROPIC_API_KEY"):
+    if provider_name() == "none":
         yield _sse(
             "error",
             {
                 "message": (
-                    "ANTHROPIC_API_KEY is not configured on the API host — "
-                    "memo generation is unavailable. Underwriting and all "
-                    "deterministic tabs keep working."
+                    "No LLM provider configured on the API host (set ANTHROPIC_API_KEY "
+                    "or GROQ_API_KEY) — memo generation is unavailable. Underwriting and "
+                    "all deterministic tabs keep working."
                 )
             },
         )
