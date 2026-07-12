@@ -36,9 +36,10 @@ RUN apt-get update \
 
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /usr/local/bin/
 
-# HF Spaces requirement: non-root user with uid 1000 named 'user',
-# writable HOME.
-RUN useradd -m -u 1000 user
+# HF Spaces requirement: non-root user with uid 1000 named 'user', writable
+# HOME. node:20-slim already ships a 'node' user at uid 1000 — free it first.
+RUN userdel -r node 2>/dev/null || true; \
+    useradd -m -u 1000 user
 ENV HOME=/home/user \
     PATH=/home/user/.local/bin:$PATH \
     UV_PYTHON=python3.11 \
