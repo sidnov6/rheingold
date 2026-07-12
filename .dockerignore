@@ -1,0 +1,15 @@
+node_modules
+**/node_modules
+.next
+**/.next
+.git
+data/raw
+.venv
+**/.venv
+__pycache__
+**/__pycache__
+.env
+*.log
+tsconfig.tsbuildinfo
+apps/web/e2e
+.claude

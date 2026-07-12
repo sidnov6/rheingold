@@ -27,6 +27,7 @@ from rheingold_engine.models import EvidenceItem
 
 from .critics import CRITICS, CriticDef, build_claims_prompt, build_rebuttals_prompt
 from .narrator import build_metrics_table, build_narrator_prompt, narrator_system_prompt
+from .providers import ToolSchemaError
 from .schemas import (
     SUBMIT_CLAIMS_TOOL,
     SUBMIT_MEMO_TOOL,
@@ -107,10 +108,10 @@ async def _call_tool(
 
     try:
         return await once(prompt)
-    except (ValidationError, SchemaViolation) as first_error:
+    except (ValidationError, SchemaViolation, ToolSchemaError) as first_error:
         try:
             return await once(_retry_prompt(prompt, tool["name"], first_error))
-        except (ValidationError, SchemaViolation):
+        except (ValidationError, SchemaViolation, ToolSchemaError):
             return None
 
 
@@ -157,10 +158,10 @@ async def _stream_memo_call(
 
     try:
         return await once(prompt), None
-    except (ValidationError, SchemaViolation) as first_error:
+    except (ValidationError, SchemaViolation, ToolSchemaError) as first_error:
         try:
             return await once(_retry_prompt(prompt, "submit_memo", first_error)), None
-        except (ValidationError, SchemaViolation) as second_error:
+        except (ValidationError, SchemaViolation, ToolSchemaError) as second_error:
             return None, f"narrator failed schema validation twice: {second_error}"
 
 
@@ -193,9 +194,9 @@ async def run_debate(
     {"memo": ..., "validation": {"ok": False, "errors": [...]}} for the API to surface.
     """
     if client is None:  # pragma: no cover - exercised only with real credentials
-        import anthropic
+        from .providers import make_client
 
-        client = anthropic.AsyncAnthropic()
+        client = make_client()
 
     evidence_json = json.dumps(
         [e.model_dump(exclude_none=True) for e in evidence], ensure_ascii=False
@@ -235,7 +236,12 @@ async def run_debate(
         )
         return claims
 
-    claim_lists = await asyncio.gather(*(run_critic(c) for c in CRITICS))
+    # Concurrent by default (spec §9.2); sequential when the provider asks for it
+    # (Groq free-tier TPM would otherwise 429 on a 3-critic burst).
+    if getattr(client, "sequential_tools", False):
+        claim_lists = [await run_critic(c) for c in CRITICS]
+    else:
+        claim_lists = await asyncio.gather(*(run_critic(c) for c in CRITICS))
     all_claims: list[Claim] = [c for claims in claim_lists for c in claims]
     _dedupe_claim_ids(all_claims)
     known_claim_ids = {c.id for c in all_claims}
@@ -283,7 +289,10 @@ async def run_debate(
         )
         return rebuttals
 
-    rebuttal_lists = await asyncio.gather(*(run_rebuttals(c) for c in CRITICS))
+    if getattr(client, "sequential_tools", False):
+        rebuttal_lists = [await run_rebuttals(c) for c in CRITICS]
+    else:
+        rebuttal_lists = await asyncio.gather(*(run_rebuttals(c) for c in CRITICS))
     all_rebuttals: list[Rebuttal] = [r for rebuttals in rebuttal_lists for r in rebuttals]
 
     # --- Steps 5-6: narrator, then citation validator (regenerate once on failure) ---

@@ -84,7 +84,16 @@ the agent layer only narrates evidence the engine produced.
 - The compliance gate is deterministic Python — verdict constraints
   (no PROCEED past a failed dealbreaker gate) are enforced in code after
   generation, not by prompt.
-- Model: `claude-sonnet-4-6` (env-overridable), temperature 0.2.
+- Model: `claude-sonnet-4-6` (env-overridable via `RHEINGOLD_MODEL`),
+  temperature 0.2, selected when `ANTHROPIC_API_KEY` is set (spec §9.2).
+- Deployment fallback: when only `GROQ_API_KEY` is set, memo generation runs
+  through an OpenAI-compatible endpoint (Groq, default `llama-3.3-70b-versatile`,
+  override with `RHEINGOLD_GROQ_MODEL`) behind a thin adapter in
+  `providers.py`. The citation-integrity validator (§9.6) gates output
+  identically on both paths — the fallback cannot lower the citation bar. On
+  Groq's free tier, critics run sequentially and 429s are honoured with
+  backoff; a farm whose memo exhausts the budget or fails validation ships
+  with the degraded memo state, never a fabricated one.
 
 ## Data vintages
 

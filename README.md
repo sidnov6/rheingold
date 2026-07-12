@@ -1,3 +1,15 @@
+---
+title: RHEINGOLD
+emoji: 🌬️
+colorFrom: yellow
+colorTo: gray
+sdk: docker
+app_port: 7860
+pinned: false
+license: mit
+short_description: Underwriting the Energiewende — cited IC memos for German wind
+---
+
 # RHEINGOLD
 
 **Underwriting the Energiewende.** Pick any real wind farm in Germany → get a
