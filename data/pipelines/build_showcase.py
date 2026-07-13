@@ -135,7 +135,13 @@ def main() -> int:
         "--no-memos",
         dest="memos",
         action="store_false",
-        help="skip live memo generation even when a provider key is set",
+        help="skip memo generation entirely",
+    )
+    parser.add_argument(
+        "--offline-memos",
+        action="store_true",
+        help="force the deterministic offline debate for memos even if a provider key is set "
+        "(reliable, always validator-clean — the default for a shipped showcase)",
     )
     parser.set_defaults(memos=True)
     args = parser.parse_args()
@@ -152,8 +158,11 @@ def main() -> int:
     from rheingold_agents.providers import provider_name
 
     provider = provider_name()
-    make_memos = args.memos and provider != "none"
-    log.info("memo generation: %s (provider=%s)", "on" if make_memos else "off", provider)
+    # Memos always bake: an LLM provider is used when present, otherwise the
+    # deterministic offline debate (always available, always validator-clean).
+    mode = "llm" if provider != "none" else "offline"
+    make_memos = args.memos
+    log.info("memo generation: %s (mode=%s, provider=%s)", "on" if make_memos else "off", mode, provider)
 
     out_dir = Path(args.out)
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -173,7 +182,11 @@ def main() -> int:
             ).model_dump()
 
         gate_flags = _gate_flags(base)
-        memo = _try_memo(base, gate_flags, fid) if make_memos else _empty_memo()
+        memo = (
+            _try_memo(base, gate_flags, fid, force_offline=args.offline_memos)
+            if make_memos
+            else _empty_memo()
+        )
         if memo["memo_markdown"]:
             memo_ok += 1
 
@@ -210,14 +223,27 @@ def _empty_memo() -> dict:
     return {"memo_markdown": None, "claims": [], "rebuttals": [], "validation": None}
 
 
-def _try_memo(base, gate_flags, fid: str) -> dict:
-    """Best-effort: run the debate; on any failure record null + reason and move on."""
+def _serialise(items) -> list:
+    return [i.model_dump() if hasattr(i, "model_dump") else i for i in items]
+
+
+def _try_memo(base, gate_flags, fid: str, force_offline: bool = False) -> dict:
+    """Best-effort memo. LLM provider when present (unless force_offline), else the
+    deterministic offline debate. On any failure record null + reason and move on."""
     import asyncio
 
+    from rheingold_agents.offline import memo_to_markdown, run_offline_debate
     from rheingold_agents.orchestrator import run_debate
+    from rheingold_agents.providers import provider_name
 
     try:
-        out = asyncio.run(run_debate(base.evidence, gate_flags))
+        if force_offline or provider_name() == "none":
+            out = asyncio.run(run_offline_debate(base.evidence, gate_flags, delay=0))
+            markdown = out["memo_markdown"]
+        else:
+            out = asyncio.run(run_debate(base.evidence, gate_flags))
+            memo = out.get("memo")
+            markdown = memo_to_markdown(memo) if memo is not None else None
     except Exception as exc:  # noqa: BLE001 — provider errors must never abort the batch
         log.warning("memo generation failed for %s: %s", fid, str(exc)[:200])
         return {
@@ -230,9 +256,9 @@ def _try_memo(base, gate_flags, fid: str) -> dict:
     if not validation.get("ok"):
         log.warning("memo for %s failed validation: %s", fid, validation.get("errors"))
     return {
-        "memo_markdown": out.get("memo_markdown"),
-        "claims": out.get("claims", []),
-        "rebuttals": out.get("rebuttals", []),
+        "memo_markdown": markdown,
+        "claims": _serialise(out.get("claims", [])),
+        "rebuttals": _serialise(out.get("rebuttals", [])),
         "validation": validation,
     }
 

@@ -269,17 +269,22 @@ def test_market_chart_payload_shape(client: TestClient) -> None:
 
 
 # ------------------------------------------------------------------ memo SSE
-def test_memo_without_provider_streams_error_event(
+def test_memo_without_provider_runs_offline_debate(
     client: TestClient, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    # No provider at all → clear degraded error (both keys absent)
+    # No provider at all → the deterministic offline debate drafts the memo (no error).
     monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
     monkeypatch.delenv("GROQ_API_KEY", raising=False)
     with client.stream("POST", "/api/memo", json={"farm_id": "wp-synthpark-a"}) as r:
         assert r.status_code == 200
         body = "".join(chunk for chunk in r.iter_text())
-    assert "event: error" in body
-    assert "GROQ_API_KEY" in body and "ANTHROPIC_API_KEY" in body
+    assert "event: error" not in body
+    assert "event: gate" in body
+    assert '"mode": "offline"' in body
+    assert "event: claim" in body  # critics streamed real claims
+    assert "event: memo_delta" in body  # paper streamed
+    assert "event: done" in body
+    assert '"ok": true' in body  # offline memo passes the citation validator
 
 
 def test_memo_with_groq_provider_proceeds_past_gate(

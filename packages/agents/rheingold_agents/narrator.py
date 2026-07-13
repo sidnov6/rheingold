@@ -37,7 +37,12 @@ def _fmt_value(value: float) -> str:
         return f"{int(v):,}"
     if abs(v) >= 1000:
         return f"{v:,.1f}"
-    return f"{v:.4g}"
+    # 4 significant figures, but guarantee a decimal point so the validator never
+    # treats a non-integer value (e.g. 180.04 → "180") as an exact-match integer.
+    s = f"{v:.4g}"
+    if "." not in s and "e" not in s and "E" not in s:
+        s = f"{v:.1f}"
+    return s
 
 
 def build_metrics_table(

@@ -18,6 +18,7 @@ from typing import TYPE_CHECKING, Any
 import anyio
 from fastapi import HTTPException
 from rheingold_agents import compliance_gate
+from rheingold_agents.offline import run_offline_debate
 from rheingold_agents.orchestrator import run_debate
 from rheingold_agents.providers import provider_name
 
@@ -34,18 +35,10 @@ def _sse(event: str, payload: dict[str, Any]) -> dict[str, str]:
 
 
 async def memo_event_stream(body: UnderwriteRequest) -> AsyncIterator[dict[str, str]]:
-    if provider_name() == "none":
-        yield _sse(
-            "error",
-            {
-                "message": (
-                    "No LLM provider configured on the API host (set ANTHROPIC_API_KEY "
-                    "or GROQ_API_KEY) — memo generation is unavailable. Underwriting and "
-                    "all deterministic tabs keep working."
-                )
-            },
-        )
-        return
+    # No LLM key? The committee still drafts — a deterministic, rule-based debate
+    # (spec §15 zero-API demo) runs instead, streaming the same events so the panel
+    # and paper animate identically. An LLM provider, when present, takes priority.
+    offline = provider_name() == "none"
 
     from .routes import build_underwrite  # deferred: routes imports this module
 
@@ -69,7 +62,11 @@ async def memo_event_stream(body: UnderwriteRequest) -> AsyncIterator[dict[str, 
 
     yield _sse(
         "gate",
-        {"flags": [f.model_dump() for f in gate_flags], "farm_id": result.farm.farm_id},
+        {
+            "flags": [f.model_dump() for f in gate_flags],
+            "farm_id": result.farm.farm_id,
+            "mode": "offline" if offline else "llm",
+        },
     )
 
     # --- agent debate: pump orchestrator events through a queue ---------------------
@@ -80,7 +77,10 @@ async def memo_event_stream(body: UnderwriteRequest) -> AsyncIterator[dict[str, 
 
     async def run() -> None:
         try:
-            await run_debate(result.evidence, gate_flags, on_event)
+            if offline:
+                await run_offline_debate(result.evidence, gate_flags, on_event)
+            else:
+                await run_debate(result.evidence, gate_flags, on_event)
         except Exception as exc:  # noqa: BLE001
             await queue.put(("error", {"message": f"memo generation failed: {exc}"}))
         finally:

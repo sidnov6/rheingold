@@ -5,9 +5,13 @@
 
 import type {
   BacktestResult,
+  Claim,
   FarmDetail,
   FleetFarm,
+  GateFlag,
   MemoEvent,
+  MemoValidation,
+  Rebuttal,
   Shocks,
   UnderwriteResult,
 } from "./types";
@@ -78,6 +82,27 @@ export const underwrite = (
 export const fetchBacktest = () => getJson<BacktestResult>(`${API_URL}/api/backtest`);
 
 /**
+ * Map an SSE (event-name, flat-payload) pair onto the MemoEvent union the UI
+ * consumes. The server emits the type in the `event:` line and a flat data
+ * object; claim/rebuttal/validation get wrapped to match the union.
+ */
+function toMemoEvent(eventType: string, p: Record<string, unknown>): MemoEvent {
+  switch (eventType) {
+    case "claim":
+      return { type: "claim", claim: p as unknown as Claim };
+    case "rebuttal":
+      return { type: "rebuttal", rebuttal: p as unknown as Rebuttal };
+    case "validation":
+      return { type: "validation", validation: p as unknown as MemoValidation };
+    case "gate":
+      return { type: "gate", flags: (p.flags ?? []) as GateFlag[] };
+    default:
+      // agent_status / memo_delta / done / error carry their fields flat.
+      return { type: eventType, ...p } as unknown as MemoEvent;
+  }
+}
+
+/**
  * POST-based SSE for /api/memo. Returns an abort function.
  */
 export function streamMemo(
@@ -105,21 +130,25 @@ export function streamMemo(
       for (;;) {
         const { done, value } = await reader.read();
         if (done) break;
-        buf += decoder.decode(value, { stream: true });
-        // SSE frames are separated by a blank line
+        // Normalise CRLF (sse-starlette emits \r\n) so frames split cleanly.
+        buf += decoder.decode(value, { stream: true }).replace(/\r\n/g, "\n");
         const frames = buf.split("\n\n");
         buf = frames.pop() ?? "";
         for (const frame of frames) {
-          const dataLines = frame
-            .split("\n")
-            .filter((l) => l.startsWith("data:"))
-            .map((l) => l.slice(5).trim());
-          if (dataLines.length === 0) continue;
-          try {
-            onEvent(JSON.parse(dataLines.join("\n")) as MemoEvent);
-          } catch {
-            /* ignore malformed frame */
+          let eventType = "";
+          const dataLines: string[] = [];
+          for (const line of frame.split("\n")) {
+            if (line.startsWith("event:")) eventType = line.slice(6).trim();
+            else if (line.startsWith("data:")) dataLines.push(line.slice(5).trim());
           }
+          if (!eventType || dataLines.length === 0) continue;
+          let payload: Record<string, unknown>;
+          try {
+            payload = JSON.parse(dataLines.join("\n"));
+          } catch {
+            continue; // malformed frame
+          }
+          onEvent(toMemoEvent(eventType, payload));
         }
       }
     } catch (err) {

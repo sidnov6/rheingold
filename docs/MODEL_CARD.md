@@ -94,6 +94,17 @@ the agent layer only narrates evidence the engine produced.
   Groq's free tier, critics run sequentially and 429s are honoured with
   backoff; a farm whose memo exhausts the budget or fails validation ships
   with the degraded memo state, never a fabricated one.
+- Zero-API offline mode (`offline.py`, spec §15): when **no** provider key is
+  set, memo generation still runs — rule-based critics derive real,
+  evidence-cited claims (availability realism by vintage, §51 exposure, DSCR
+  headroom vs covenant, gearing-cap, merchant tail) and a deterministic
+  narrator composes the §9.7 memo. It streams the identical event sequence so
+  the debate panel and paper animate the same way, and every number is routed
+  through a formatter that round-trips through the citation validator — the
+  offline memo passes §9.6 on 150/150 sampled farms. It is labelled "rule-based
+  memo" in the appendix so it is never mistaken for LLM-authored prose. This is
+  the shipped-showcase default (`build_showcase.py --offline-memos`), making the
+  committee demo work with no keys and no network.
 
 ## Data vintages
 
