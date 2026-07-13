@@ -80,8 +80,24 @@ async def memo_event_stream(body: UnderwriteRequest) -> AsyncIterator[dict[str, 
             if offline:
                 await run_offline_debate(result.evidence, gate_flags, on_event)
             else:
-                await run_debate(result.evidence, gate_flags, on_event)
-        except Exception as exc:  # noqa: BLE001
+                try:
+                    await run_debate(result.evidence, gate_flags, on_event)
+                except Exception as exc:  # noqa: BLE001 — LLM provider failed (rate limit, etc.)
+                    # Safety net: the committee still drafts. Fall back to the
+                    # deterministic offline debate so a memo always completes.
+                    await queue.put(
+                        (
+                            "agent_status",
+                            {
+                                "agent": "narrator",
+                                "phase": "memo",
+                                "status": "running",
+                                "note": f"LLM unavailable ({str(exc)[:80]}); using rule-based debate",
+                            },
+                        )
+                    )
+                    await run_offline_debate(result.evidence, gate_flags, on_event)
+        except Exception as exc:  # noqa: BLE001 — even the offline path failed
             await queue.put(("error", {"message": f"memo generation failed: {exc}"}))
         finally:
             await queue.put(_QUEUE_END)
